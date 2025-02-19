@@ -1,0 +1,19 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Animal {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  nome      String
+  sexo      String
+  porte     String
+  idade     String
+  descricao String
+  castrado  Boolean
+  createdAt DateTime @default(now())
+}
