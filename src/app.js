@@ -9,7 +9,7 @@ app.use(cors());
 app.use(express.json());
 
 // Configurando as rotas
-app.use('/animals', animalRoutes);
+app.use('/animais', animalRoutes);
 app.use('/auth', authRoutes);
 
 export default app;
