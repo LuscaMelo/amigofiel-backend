@@ -107,6 +107,31 @@ const AnimalController = {
             });
         }
     },
+
+    //Marcar animal como adotado
+    async markAsAdopted(req, res) {
+        try {
+            const { id } = req.params;
+
+            const animal = await prisma.animal.update({
+                where: { id },
+                data: { adopted: true },
+            });
+
+            res.status(200).json({
+                success: true,
+                message: "Animal marcado como adotado",
+                data: animal,
+            });
+        } catch (error) {
+            res.status(404).json({
+                success: false,
+                message: "Animal não encontrado",
+                error: error.message,
+            });
+        }
+    }
+
 };
 
 export default AnimalController;
