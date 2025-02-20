@@ -1,9 +1,16 @@
-import express from "express";
-import animalRoutes from "./routes/animalRoutes.js";
+import express from 'express';
+import cors from 'cors';
+import animalRoutes from './routes/animalRoutes.js';
+import authRoutes from './routes/authRoutes.js';
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
-app.use("/animais", animalRoutes);
+
+// Configurando as rotas
+app.use('/animals', animalRoutes);
+app.use('/auth', authRoutes);
 
 export default app;
+
