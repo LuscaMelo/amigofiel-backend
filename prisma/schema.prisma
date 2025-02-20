@@ -24,3 +24,11 @@ enum AgeUnit {
   MONTHS
   YEARS
 }
+
+model User {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  name     String
+  email    String @unique
+  password String
+  role     String @default("admin")
+}
