@@ -8,12 +8,19 @@ generator client {
 }
 
 model Animal {
-  id        String  @id @default(auto()) @map("_id") @db.ObjectId
-  nome      String
-  tipo      String
-  sexo      String
-  porte     String
-  idade     Int
-  descricao String
-  castrado  Boolean
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  type        String
+  gender      String
+  size        String
+  age         Int
+  ageUnit     AgeUnit @default(YEARS)
+  description String
+  neutered    Boolean
+  adopted     Boolean @default(false)
+}
+
+enum AgeUnit {
+  MONTHS
+  YEARS
 }
