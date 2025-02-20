@@ -16,7 +16,7 @@ const authMiddleware = (req, res, next) => {
         req.user = decoded;
 
         // Verifica se o usuário é o administrador
-        if (req.user.role == 'admin') {
+        if (req.user.role !== 'admin') {
             return res.status(403).json({
                 success: false,
                 message: "Acesso negado. Somente o administrador pode acessar esta rota."
