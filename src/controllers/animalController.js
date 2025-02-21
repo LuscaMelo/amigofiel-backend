@@ -120,12 +120,12 @@ const AnimalController = {
         }
     },
 
-    // Deletar um animal e suas imagens
+    // Apagar animal e suas imagens
     async delete(req, res) {
         try {
             const { id } = req.params;
 
-            // Buscar o animal para obter o caminho das imagens
+            // Buscar o animal no banco para obter as imagens
             const animal = await prisma.animal.findUnique({
                 where: { id },
             });
@@ -137,6 +137,19 @@ const AnimalController = {
                 });
             }
 
+            // Obtendo o diretório raiz do projeto (onde está uploads/)
+            const rootDir = path.resolve();
+
+            // Excluir as imagens do sistema de arquivos
+            animal.images.forEach(image => {
+                const imageFileName = path.basename(image);
+                const imagePath = path.join(rootDir, 'uploads', imageFileName);
+
+                if (fs.existsSync(imagePath)) {
+                    fs.unlinkSync(imagePath);
+                }
+            });
+
             // Excluir o animal do banco de dados
             await prisma.animal.delete({
                 where: { id },
@@ -147,7 +160,6 @@ const AnimalController = {
                 message: "Animal removido com sucesso",
             });
         } catch (error) {
-            console.error('Erro ao remover o animal:', error);
             res.status(500).json({
                 success: false,
                 message: "Erro ao remover o animal",
@@ -155,7 +167,6 @@ const AnimalController = {
             });
         }
     },
-
 
     // Marcar animal como adotado
     async markAsAdopted(req, res) {
