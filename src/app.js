@@ -11,6 +11,7 @@ app.use(express.json());
 // Configurando as rotas
 app.use('/animais', animalRoutes);
 app.use('/auth', authRoutes);
+app.use("/uploads", express.static("uploads"));
 
 export default app;
 

@@ -1,4 +1,6 @@
 import { PrismaClient } from '@prisma/client';
+import path from 'path';
+import fs from 'fs';
 
 const prisma = new PrismaClient();
 
@@ -51,9 +53,24 @@ const AnimalController = {
     // Criar um novo animal
     async create(req, res) {
         try {
+            const { name, type, gender, size, age, description, neutered, adopted } = req.body;
+
+            const animalData = {
+                name,
+                type,
+                gender,
+                size,
+                age: Number(age),
+                description,
+                neutered: Boolean(neutered),
+                adopted: Boolean(adopted),
+                images: req.files.map(file => `uploads/${file.filename}`)
+            };
+
             const animal = await prisma.animal.create({
-                data: req.body,
+                data: animalData,
             });
+
             res.status(201).json({
                 success: true,
                 message: "Animal criado com sucesso",
@@ -71,9 +88,23 @@ const AnimalController = {
     // Atualizar um animal
     async update(req, res) {
         try {
+            const { name, type, gender, size, age, description, neutered, adopted, images } = req.body;
+
+            const animalData = {
+                name,
+                type,
+                gender,
+                size,
+                age: Number(age),
+                description,
+                neutered: Boolean(neutered),
+                adopted: Boolean(adopted),
+                images
+            };
+
             const animal = await prisma.animal.update({
                 where: { id: req.params.id },
-                data: req.body,
+                data: animalData,
             });
             res.status(200).json({
                 success: true,
@@ -89,26 +120,44 @@ const AnimalController = {
         }
     },
 
-    // Deletar um animal
+    // Deletar um animal e suas imagens
     async delete(req, res) {
         try {
-            await prisma.animal.delete({
-                where: { id: req.params.id },
+            const { id } = req.params;
+
+            // Buscar o animal para obter o caminho das imagens
+            const animal = await prisma.animal.findUnique({
+                where: { id },
             });
-            res.status(204).json({
+
+            if (!animal) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Animal não encontrado",
+                });
+            }
+
+            // Excluir o animal do banco de dados
+            await prisma.animal.delete({
+                where: { id },
+            });
+
+            res.status(200).json({
                 success: true,
                 message: "Animal removido com sucesso",
             });
         } catch (error) {
-            res.status(404).json({
+            console.error('Erro ao remover o animal:', error);
+            res.status(500).json({
                 success: false,
-                message: "Animal não encontrado",
+                message: "Erro ao remover o animal",
                 error: error.message,
             });
         }
     },
 
-    //Marcar animal como adotado
+
+    // Marcar animal como adotado
     async markAsAdopted(req, res) {
         try {
             const { id } = req.params;
