@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
+import { uploadToCloudinary } from "../utils/uploadToCloudinary.js";
 import path from 'path';
-import fs from 'fs';
+import cloudinary from "../config/cloudinary.js";
 
 const prisma = new PrismaClient();
 
@@ -50,25 +51,33 @@ const AnimalController = {
         }
     },
 
-    // Criar um novo animal
+    // Criar um animal
     async create(req, res) {
         try {
             const { name, type, gender, size, age, description, neutered, adopted } = req.body;
 
-            const animalData = {
-                name,
-                type,
-                gender,
-                size,
-                age: Number(age),
-                description,
-                neutered: Boolean(neutered),
-                adopted: Boolean(adopted),
-                images: req.files.map(file => `uploads/${file.filename}`)
-            };
+            let uploadedImages = [];
+
+            // Upload de imagens para o Cloudinary
+            if (req.files && req.files.length > 0) {
+                for (const file of req.files) {
+                    const url = await uploadToCloudinary(file.buffer);
+                    uploadedImages.push(url);
+                }
+            }
 
             const animal = await prisma.animal.create({
-                data: animalData,
+                data: {
+                    name,
+                    type,
+                    gender,
+                    size,
+                    age: Number(age),
+                    description,
+                    neutered: neutered === "true",
+                    adopted: adopted === "true",
+                    images: uploadedImages
+                },
             });
 
             res.status(201).json({
@@ -76,7 +85,9 @@ const AnimalController = {
                 message: "Animal criado com sucesso",
                 data: animal,
             });
+
         } catch (error) {
+            console.log(error);
             res.status(500).json({
                 success: false,
                 message: "Erro ao criar o animal",
@@ -140,15 +151,16 @@ const AnimalController = {
             // Obtendo o diretório raiz do projeto (onde está uploads/)
             const rootDir = path.resolve();
 
-            // Excluir as imagens do sistema de arquivos
-            animal.images.forEach(image => {
-                const imageFileName = path.basename(image);
-                const imagePath = path.join(rootDir, 'uploads', imageFileName);
+            // Remover imagens do Cloudinary
+            if (animal.images && animal.images.length > 0) {
+                const deletePromises = animal.images.map(url => {
+                    const publicId = url.split("/").pop().split(".")[0]; // pega o nome sem extensão
+                    return cloudinary.uploader.destroy(`amigo-fiel/${publicId}`);
+                });
 
-                if (fs.existsSync(imagePath)) {
-                    fs.unlinkSync(imagePath);
-                }
-            });
+                await Promise.all(deletePromises);
+            }
+
 
             // Excluir o animal do banco de dados
             await prisma.animal.delete({
@@ -190,7 +202,7 @@ const AnimalController = {
                 error: error.message,
             });
         }
-    }
+    },
 
 };
 
